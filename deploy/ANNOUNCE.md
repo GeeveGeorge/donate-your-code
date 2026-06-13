@@ -1,59 +1,78 @@
-# X / Twitter announcement (draft)
+# X / Twitter launch post
 
-A thread you can post once the staging repo + HF dataset are live and a signed
-release is cut. Edit the voice to taste.
+Pick the single hook tweet **or** the thread. Fill in `LIVE_LINK` with where your
+donation/dataset is live (e.g. the Hugging Face dataset, or your merged PR) once
+the staging repo + HF dataset are deployed. Repo + v0.1.0 release are already live.
 
 ---
 
+## Option A — single hook tweet (most viral)
+
+> Fable 5 got taken down.
+>
+> But you used it — and its traces are still sitting in your `~/.claude` folder.
+>
+> Before they're gone, let's crowdsource them into one open dataset.
+>
+> Donate only what you want. Your agent does it for you 👇
+> github.com/GeeveGeorge/donate-your-code
+
+---
+
+## Option B — thread
+
 **1/**
-Donate Your Code 🧶
+Fable 5 got taken down.
 
-A free, open way to donate your own Claude **Fable 5** coding transcripts to a
-public, CC0 dataset — without leaking secrets.
+But most of you *used* it — and its traces are still inside your `~/.claude`
+folder right now.
 
-Point your Claude Code agent at the repo, pick which projects to share, done.
-
-github.com/GeeveGeorge/donate-your-code
+Let's crowdsource them into one open, CC0 dataset before they're gone. 🧶
 
 **2/**
-How it works:
+You're in full control of what you share.
 
-`dyc` is a tiny, audited CLI. It finds genuine Fable 5 turns in your local
-~/.claude transcripts, scrubs secrets + PII (fail-closed), and opens ONE GitHub PR
-with your own token.
-
-No backend. No API key. No data leaves your machine unless you confirm.
+Pick your projects — that weekend hack, that fun side project, whatever you're
+happy to make public. **Select or deselect** each one. Nothing else gets touched.
 
 **3/**
-Security is the whole point:
+The whole thing is hands-off:
 
-• hard allowlist — it only ever reads ~/.claude transcripts, nothing else
-• single egress — the only network call is the GitHub API
-• fail-closed scrub + a tripwire: if a secret survives, the record is dropped
-• you preview the EXACT scrubbed payload before anything is sent
+Give the repo link to your Claude Code (or any) agent and say
+"donate my Fable 5 code." It finds your Fable 5 turns, you choose what to share,
+it scrubs secrets, and opens a PR. **No API key. No backend.**
 
-**4/**
-The agent never reads your transcripts. It just runs `dyc` and helps you choose.
-That kills prompt-injection from a poisoned transcript — the bytes never enter the
-model's context. It's all in AGENTS.md.
-
-**5/**
-Server side, "no junk gets in" is structural, not a promise:
-
-PRs can only add content-addressed records under staging/**. A GitHub Actions gate
-re-validates everything from scratch, a bot merges what passes, and an hourly job
-compacts to a Hugging Face Parquet dataset. Code changes via PR are impossible.
-
-**6/**
-Honest about the hard part: you can't *prove* a transcript is Fable 5 (the model
-field is plaintext). So every record is labeled self-attested-unverified, and we
-lean on cross-contributor corroboration + structural checks. Filter accordingly.
-
-**7/**
-CC0. Apache-2.0 tooling. Go↔Python content-addressing is conformance-tested so the
-client and the server agree byte-for-byte.
-
-Try it, break it, send PRs:
 github.com/GeeveGeorge/donate-your-code
 
-🧶
+**4/**
+It's safe by design:
+
+• your agent NEVER reads your transcripts — a tiny audited CLI does
+• it only ever touches `~/.claude`, nothing else on disk
+• its only network call is the GitHub API
+• secrets / keys / paths / emails are stripped, fail-closed
+• you see the EXACT scrubbed payload before anything is sent
+
+**5/**
+I've donated mine to kick it off — it's live here: LIVE_LINK
+
+Add yours in two steps:
+1. point your agent at github.com/GeeveGeorge/donate-your-code
+2. tell it to donate your Fable 5 code
+
+**6/**
+CC0. Open source. The more people contribute, the richer the public record of what
+Fable 5 could actually do.
+
+If you ran Fable 5, you're holding a piece of it. Share the part you want. 🧶
+github.com/GeeveGeorge/donate-your-code
+
+---
+
+## Notes
+
+- Honesty matters for trust: the dataset card and README state plainly that
+  provenance is **self-attested/unverified** and scrubbing is best-effort. Don't
+  overclaim in the post.
+- A short demo GIF of `dyc scan` → pick a project → `dyc preview` (scrubbed) →
+  `dyc donate` would massively boost the thread.
