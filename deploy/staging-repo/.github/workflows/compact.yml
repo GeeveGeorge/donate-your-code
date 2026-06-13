@@ -21,7 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    environment: compaction   # gate HF_TOKEN behind a protected environment
+    # HF_TOKEN is a repo secret. It is safe at repo level here: fork PRs (the only
+    # untrusted input) never receive secrets, and only maintainers can change
+    # workflows (CODEOWNERS), so no untrusted workflow can read it. For an extra
+    # gate you may move it into a protected `environment:` with no reviewers.
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
