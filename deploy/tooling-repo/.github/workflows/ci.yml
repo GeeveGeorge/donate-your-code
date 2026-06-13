@@ -1,0 +1,36 @@
+# Tooling-repo CI. Place at .github/workflows/ci.yml in the donate-your-code repo.
+# (Pushing files under .github/workflows/ requires a token with `workflow` scope:
+#  run `gh auth refresh -h github.com -s workflow` once, or add via the web UI.)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.23'
+      - run: go vet ./...
+      - run: test -z "$(gofmt -l $(git ls-files '*.go'))" || (gofmt -l $(git ls-files '*.go'); exit 1)
+      - run: go test ./...
+      - run: go build ./...
+
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      # The Go and Python canonicalization MUST agree, or content-addressing breaks.
+      - run: python deploy/staging-repo/tests/test_conformance.py
+      - run: python deploy/staging-repo/tests/test_validate.py

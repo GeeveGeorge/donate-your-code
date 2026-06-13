@@ -1,0 +1,83 @@
+# Signed, reproducible release of the dyc binary. Place at
+# .github/workflows/release.yml in the donate-your-code repo (needs `workflow` scope).
+# Tag a release (e.g. `git tag v0.1.0 && git push --tags`) to trigger it.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write        # for cosign keyless signing + provenance attestation
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { goos: darwin,  goarch: arm64 }
+          - { goos: darwin,  goarch: amd64 }
+          - { goos: linux,   goarch: amd64 }
+          - { goos: linux,   goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.23'
+      - name: Reproducible build
+        env:
+          CGO_ENABLED: '0'
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          out="dyc-${{ matrix.goos }}-${{ matrix.goarch }}"
+          [ "${{ matrix.goos }}" = "windows" ] && out="$out.exe"
+          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o "$out" ./cmd/dyc
+          sha256sum "$out" | tee -a CHECKSUMS.txt
+          echo "ARTIFACT=$out" >> "$GITHUB_ENV"
+      - name: Provenance attestation (SLSA)
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: ${{ env.ARTIFACT }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: |
+            ${{ env.ARTIFACT }}
+            CHECKSUMS.txt
+
+  sign-and-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { path: dist, merge-multiple: true }
+      - name: Aggregate checksums
+        run: cat dist/CHECKSUMS.txt | sort -u > CHECKSUMS && cat CHECKSUMS
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      - name: Sign binaries (keyless)
+        run: |
+          for f in dist/dyc-*; do
+            cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
+          done
+      - name: SBOM (CycloneDX)
+        run: |
+          go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest || true
+          ~/go/bin/cyclonedx-gomod mod -json -output sbom.cdx.json . || echo "sbom step best-effort"
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: |
+            dist/dyc-*
+            CHECKSUMS
+            sbom.cdx.json
+          body: |
+            Signed, reproducible `dyc` release.
+            Verify: `cosign verify-blob --certificate <f>.pem --signature <f>.sig <binary>`
+            and check the SHA-256 against `CHECKSUMS`.
