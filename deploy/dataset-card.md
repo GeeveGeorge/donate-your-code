@@ -67,5 +67,5 @@ downloaded from a public CC0 dataset cannot be recalled.
 
 ```python
 from datasets import load_dataset
-ds = load_dataset("GeeveGeorge/donate-your-code", streaming=True)
+ds = load_dataset("g30rv17ys/donate-your-code", streaming=True)
 ```
