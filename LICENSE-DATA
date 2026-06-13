@@ -1,0 +1,9 @@
+Contributed data and the schemas in this repository are dedicated to the public
+domain under Creative Commons Zero v1.0 Universal.
+
+SPDX-License-Identifier: CC0-1.0
+
+Full dedication text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+(The complete CC0 legal code should be vendored here verbatim before public
+release; this pointer file stands in for it during development.)

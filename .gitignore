@@ -1,0 +1,19 @@
+# Build artifacts
+/dyc
+/dist/
+*.exe
+
+# Go
+/vendor/
+
+# Local state / scratch
+*.local
+/tmp/
+
+# Never commit real transcripts or scrubbed payloads
+*.jsonl
+!testdata/**/*.jsonl
+preview_*.json
+
+# OS
+.DS_Store
