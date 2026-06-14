@@ -1,43 +1,29 @@
 # Donate Your Code (`dyc`)
 
-Donate your own **Claude Fable 5** transcript turns to a free, public, CC0
-dataset — safely. `dyc` is a small, audited Go binary that finds genuine Fable 5
-turns in your local Claude Code transcripts, **scrubs secrets and PII**, and (in
-later versions) contributes them to a vetted dataset via a least-privilege GitHub
-Pull Request.
-
-> **Provenance is self-attested and unverified.** It is impossible to *prove* a
-> record came from Fable 5 (the model name is a plaintext field). This project
-> enforces structural checks and computes corroboration/confidence signals, but
-> the dataset may contain spoofed records. See [SECURITY.md](./SECURITY.md).
-
-> **Legal note.** Anthropic's terms assign output ownership to you but restrict
-> using outputs to *train a competing model*. This dataset is framed for
-> **research / evaluation / transparency**, you are responsible for your own
-> compliance, and the maintainer should obtain counsel before any public launch.
-> Not legal advice.
-
-## How it works
-
-```
-you ──dyc donate──▶ GitHub staging repo ──CI gate──▶ bot merge ──hourly──▶ Hugging Face Parquet dataset
-   (your own token)   (authoritative vetting)        (one writer)          (CC0, streamable)
-```
-
-The `dyc` binary is the **trust boundary**: it reads only your `~/.claude`
-transcripts behind a hard allowlist, makes no network calls except the GitHub API,
-and fails closed. The **server-side CI gate** re-validates and re-scrubs everything
-independently — a tampered client can only harm its own submission.
+Share your own **Claude Fable 5** coding outputs to a free, open, CC0 dataset. A
+small helper (`dyc`) finds the Fable 5 turns in your local Claude Code history,
+cleans them up (keys, emails, and local paths removed), and opens a pull request
+with the projects you pick.
 
 ## Quick start — just tell your agent
 
 In Claude Code (or any coding agent), say:
 
-> **look at https://github.com/GeeveGeorge/donate-your-code and donate my Fable 5 code per its AGENTS.md**
+> **look at https://github.com/GeeveGeorge/donate-your-code and follow its AGENTS.md to donate my Claude Fable 5 outputs**
 
-The agent installs `dyc`, lists your projects, asks **which ones** you want to
-share, shows you the scrubbed preview, and opens the PR. You only pick projects
-and approve — no API key, nothing else to set up.
+It lists your projects, asks **which ones** you want to share, shows you the
+cleaned-up preview, and opens the PR. You just pick projects and give a final OK.
+
+## How it works
+
+```
+you ──donate──▶ GitHub staging repo ──CI checks──▶ merge ──hourly──▶ Hugging Face dataset
+```
+
+`dyc` reads only your `~/.claude` history, removes secrets/keys/emails/paths, and
+opens one GitHub PR. A CI step double-checks each submission before it lands. The
+dataset and its details live at
+[huggingface.co/datasets/g30rv17ys/donate-your-code](https://huggingface.co/datasets/g30rv17ys/donate-your-code).
 
 ## Or run it yourself
 
