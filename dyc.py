@@ -1113,7 +1113,9 @@ def cmd_donate(args):
             return 0
     token, src = resolve_token()
     if not token:
-        print("donate: no GitHub token. Run `python3 dyc.py auth login`.", file=sys.stderr)
+        token, src = gh_cli_token(), "gh cli"   # use the user's existing gh login
+    if not token:
+        print("donate: no GitHub token. Sign in with `gh auth login`, or set GH_TOKEN.", file=sys.stderr)
         return 1
     gh = GitHub(token)
     try:
