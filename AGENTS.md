@@ -35,13 +35,14 @@ this short — one line, no wall of text.** Tell them to paste it with a leading
 
 > ✅ Ready. To publish, paste this:
 > ```
-> ! python3 dyc.py donate <project> --yes
+> ! python3 dyc.py donate <the projects they picked> --yes
 > ```
 
-Use the project name(s) they picked (e.g. `donate robot-arm-viewer --yes`). That
-builds the record and opens one PR to `GeeveGeorge/donate-your-code-staging` using
-their existing `gh` login. When it prints the PR link, relay it — CI checks the
-record and a bot merges it; it lands in the dataset within the hour.
+Fill in the exact project name(s) they chose in step 2 (whatever those are on their
+machine) — never a hardcoded example. That builds the record(s) and opens one PR to
+`GeeveGeorge/donate-your-code-staging` using their existing `gh` login (it forks the
+repo automatically if they don't own it). When it prints the PR link, relay it — CI
+checks the record and a bot merges it; it lands in the dataset within the hour.
 
 That's it. The user's only jobs: pick projects, and paste that one line.
 
