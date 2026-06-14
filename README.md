@@ -29,31 +29,32 @@ transcripts behind a hard allowlist, makes no network calls except the GitHub AP
 and fails closed. The **server-side CI gate** re-validates and re-scrubs everything
 independently — a tampered client can only harm its own submission.
 
-## Install & use
+## Quick start — just tell your agent
+
+In Claude Code (or any coding agent), say:
+
+> **look at https://github.com/GeeveGeorge/donate-your-code and donate my Fable 5 code per its AGENTS.md**
+
+The agent installs `dyc`, lists your projects, asks **which ones** you want to
+share, shows you the scrubbed preview, and opens the PR. You only pick projects
+and approve — no API key, nothing else to set up.
+
+## Or run it yourself
 
 ```sh
-go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest   # or: go build -o dyc ./cmd/dyc
+curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/install.sh | sh
+# (or: go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest)
 
-dyc scan                       # list projects/sessions and count genuine Fable 5 turns (no network)
-dyc scan --json                # machine-readable, for agent-driven selection
-dyc preview <selector> --full  # show the EXACT post-scrub payload (no network)
-dyc auth login                 # store a least-privilege GitHub token (prefers the gh CLI)
-dyc donate <selA> <selB> ...   # scrub + validate + open ONE GitHub PR (use --dry-run first)
-dyc status                     # config roots, token source, donation count, staging target
+./dyc scan                       # list projects + genuine Fable 5 turn counts (no network)
+./dyc preview <selector> --full  # show the EXACT post-scrub payload (no network)
+./dyc auth login                 # store a least-privilege GitHub token (prefers the gh CLI)
+./dyc donate <selA> <selB> ...   # scrub + validate + open ONE GitHub PR (try --dry-run first)
 ```
 
-A *selector* is a project basename substring, a session id prefix, or `all`. You
-can pass several at once to donate specific projects/sessions. `scan`, `preview`,
-and `donate --dry-run` make **no network calls**; `donate` talks only to the
-GitHub API.
-
-### For agents (no API key needed)
-
-Point your Claude Code agent at this repo and it follows [`AGENTS.md`](./AGENTS.md):
-the agent runs `dyc scan` to list your projects, lets you **pick which projects'
-Fable 5 outputs to donate**, shows you the exact scrubbed payload with
-`dyc preview`, and then runs `dyc donate` for your selection. The agent only
-orchestrates `dyc` — it never reads your transcripts itself.
+A *selector* is a project basename substring, a session id prefix, or `all`; pass
+several at once. `scan`, `preview`, and `donate --dry-run` make **no network
+calls**; `donate` talks only to the GitHub API. The agent only orchestrates `dyc`
+— it never reads your transcripts itself (see [`AGENTS.md`](./AGENTS.md)).
 
 ## What gets donated
 
