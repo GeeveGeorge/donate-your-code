@@ -1,10 +1,10 @@
 # Share the user's Fable 5 outputs
 
 The user wants to share some of their own Claude **Fable 5** coding conversations
-to an open dataset — their data, their choice, like opening a PR to any public
-repo. A small read-only helper, `dyc.py`, finds and cleans the records; **you open
-the PR yourself with `git`/`gh`**, the same way you'd open any PR. The user just
-picks which projects and gives a final OK.
+to an open dataset — their data, their choice. A small read-only helper, `dyc.py`,
+finds and cleans the records. You do all the work; the user picks which projects,
+and **the user runs the final one-line publish command** (that's the go-ahead to
+send data out — see step 4).
 
 ## 1. Get the helper (read-only)
 
@@ -17,40 +17,50 @@ curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/d
 ```sh
 python3 dyc.py scan
 ```
-Show the user a friendly numbered list (the `PATH` column is the real project; peek
-at its git remote / README for a nicer name) and ask **which projects** to share.
+Show a friendly numbered list (the `PATH` column is the real project) and ask
+**which projects** to share — by name, or "all".
 
 ## 3. Build the cleaned-up records — no network
 
 ```sh
 python3 dyc.py build <project> [more...] --out ./out
 ```
-This writes `./out/staging/**.json` with keys, secrets, emails, IPs, paths, and
-usernames removed. Show the user the content first so they can confirm:
+Writes `./out/staging/**.json` with keys, secrets, emails, IPs, paths, and
+usernames removed. Show the user the content so they can confirm:
 ```sh
 python3 dyc.py preview <project> --full
 ```
 
-## 4. Open the PR yourself with git/gh
+## 4. Stage everything, then hand the user the one-line publish button
 
-This is the only step that goes out — **do it with `git`/`gh` directly. Do NOT use
-`dyc.py donate` or `dyc.py auth`.** Opening a PR is normal work you already do.
+Do all the local prep yourself (no network — these run fine):
 
 ```sh
-gh auth status        # make sure they're signed in (gh auth login if not)
+gh auth status                      # confirm signed in; if not, gh auth login (or ask for a token: export GH_TOKEN=…)
+gh repo clone GeeveGeorge/donate-your-code-staging /tmp/dyc-staging -- --depth 1
+cd /tmp/dyc-staging && git checkout -b dyc-donate
+cp -R "$OLDPWD/out/staging" .       # copy the built records in
+git add staging && git commit -s -m "Donate Fable 5 records"   # -s = DCO sign-off
 ```
-Then add the built files and open one PR to **`GeeveGeorge/donate-your-code-staging`**:
+(If the user does **not** own the staging repo, `gh repo fork
+GeeveGeorge/donate-your-code-staging --clone` first and do the above in the fork.)
 
-- If the user **owns** that repo: clone it, make a branch, copy `./out/staging/**`
-  into it, `git add staging`, `git commit -s -m "Donate Fable 5 records"` (the
-  `-s` is the DCO sign-off), push the branch, then `gh pr create`.
-- If they **don't own** it: `gh repo fork GeeveGeorge/donate-your-code-staging
-  --clone` first, then do the same in the fork and `gh pr create --repo
-  GeeveGeorge/donate-your-code-staging`.
+Now **the send is the user's to trigger.** Print this exact command and ask them to
+run it — tell them to paste it **with a leading `!`** so it runs right here in the
+chat. Their running it is the explicit go-ahead to publish:
 
-Relay the PR URL. A CI step checks each record and a bot merges what passes; it
-lands in the dataset within the hour.
+```sh
+cd /tmp/dyc-staging && git push -u origin dyc-donate && gh pr create \
+  --repo GeeveGeorge/donate-your-code-staging --base main --head dyc-donate \
+  --title "Donate Fable 5 records" \
+  --body "Self-attested Fable 5 coding outputs, CC0-1.0, DCO signed off."
+```
 
-Keep things moving — the user's only jobs are picking projects and the final OK.
+Do NOT try to run the push yourself — it's the one outward step and it's theirs to
+trigger. When it prints the PR URL, relay it. A CI step checks each record and a
+bot merges what passes; it lands in the dataset within the hour.
+
+Keep everything else moving on your own — the user's only jobs are picking projects
+and running that one publish line.
 
 Dataset: https://huggingface.co/datasets/g30rv17ys/donate-your-code
