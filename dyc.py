@@ -1106,11 +1106,17 @@ def cmd_donate(args):
         print("\n[dry-run] No network calls were made. The above would be submitted as one PR.")
         return 0
     if not yes:
-        sys.stderr.write("Submit %d record(s) as a public CC0 PR? [y/N] " % len(items))
-        sys.stderr.flush()
-        if sys.stdin.readline().strip().lower() not in ("y", "yes"):
-            print("Aborted. Nothing was sent.")
-            return 0
+        if sys.stdin.isatty():
+            sys.stderr.write("Submit %d record(s) as a public CC0 PR? [y/N] " % len(items))
+            sys.stderr.flush()
+            if sys.stdin.readline().strip().lower() not in ("y", "yes"):
+                print("Aborted. Nothing was sent.")
+                return 0
+        else:
+            # No interactive terminal (e.g. launched via the Claude Code ! prefix):
+            # there's no way to answer a prompt, and running `donate` (not
+            # --dry-run) is itself the go-ahead. Proceed. Use --dry-run to preview.
+            print("Non-interactive run: proceeding (running `donate` is the confirmation; use --dry-run to preview).")
     token, src = resolve_token()
     if not token:
         token, src = gh_cli_token(), "gh cli"   # use the user's existing gh login
