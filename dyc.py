@@ -1154,16 +1154,65 @@ def cmd_donate(args):
     return 0
 
 
+def cmd_build(args):
+    """Write the cleaned-up records for the picked projects to a local folder.
+    NO network calls — just reads transcripts and writes JSON files you can then
+    open a PR with (using git/gh yourself)."""
+    out = "out"
+    selectors = []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--out":
+            if i + 1 >= len(args):
+                print("build: --out needs a folder", file=sys.stderr)
+                return 2
+            i += 1
+            out = args[i]
+        elif a.startswith("-"):
+            print("build: unknown flag %r" % a, file=sys.stderr)
+            return 2
+        else:
+            selectors.append(a)
+        i += 1
+    if not selectors:
+        print("build: at least one selector is required (project name, or 'all')", file=sys.stderr)
+        return 2
+    sessions = discover_sessions()
+    scrub = _make_scrubber(sessions)
+    n = 0
+    for s in sessions:
+        if not _match(selectors, s):
+            continue
+        for rec, status, reason in build_records(s, scrub, VERSION):
+            if status != "ok":
+                continue
+            rec["dco"] = True
+            rid = rec["record_id"]
+            d = os.path.join(out, "staging", rid[:2], rid[2:4])
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, rid + ".json"), "w") as f:
+                json.dump(rec, f, indent=2, ensure_ascii=False)
+            n += 1
+    if n == 0:
+        print("Nothing to build (no Fable 5 records matched, or all were dropped).")
+        return 0
+    print("Wrote %d record(s) under %s/staging/  — no network calls were made." % (n, out))
+    print("Next: open a PR adding %s/staging/** to GeeveGeorge/donate-your-code-staging (use git/gh)." % out)
+    return 0
+
+
 USAGE = """dyc — Donate Your Code (python client)
 
   python3 dyc.py scan [--all] [--json]
   python3 dyc.py preview <selector> [more...] [--full] [--json]
+  python3 dyc.py build <selector> [more...] [--out FOLDER]    # write records locally, NO network
   python3 dyc.py auth login|status|logout
   python3 dyc.py donate <selector> [more...] [--dry-run] [--yes]
   python3 dyc.py status
 
 A selector is a project name substring, a session id prefix, or 'all'.
-scan/preview/donate --dry-run make NO network calls.
+scan/preview/build/donate --dry-run make NO network calls.
 """
 
 
@@ -1176,6 +1225,8 @@ def main(argv):
         return cmd_scan(rest)
     if cmd == "preview":
         return cmd_preview(rest)
+    if cmd == "build":
+        return cmd_build(rest)
     if cmd == "auth":
         return cmd_auth(rest)
     if cmd == "donate":
