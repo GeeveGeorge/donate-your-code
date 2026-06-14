@@ -158,27 +158,48 @@ func ParseReader(r io.Reader) (lines []*Line, skipped int, err error) {
 	}
 }
 
-// FirstCWD returns the first non-empty top-level `cwd` value in a transcript.
-// This is the real absolute project path (the encoded folder name is lossy when
-// path segments contain '-', e.g. EDA-DB). It is used only for LOCAL display and
-// selection; cwd is never donated.
-func FirstCWD(r io.Reader) string {
+// ProjectCWD returns the project working directory for a transcript: the most
+// frequently-occurring top-level `cwd`, preferring a real project dir over the
+// bare home directory (sessions are often launched from home but worked in a
+// subproject). The encoded folder name is lossy when path segments contain '-'
+// or '_' (e.g. EDA_DB), so reading cwd is the reliable source. Used only for
+// LOCAL display and selection; cwd is never donated.
+func ProjectCWD(r io.Reader, homeDir string) string {
 	br := bufio.NewReaderSize(r, 1<<20)
-	for i := 0; i < 200; i++ {
+	counts := map[string]int{}
+	for i := 0; i < 8000; i++ {
 		chunk, err := br.ReadString('\n')
 		if t := strings.TrimSpace(chunk); t != "" {
 			var l struct {
 				CWD string `json:"cwd"`
 			}
 			if json.Unmarshal([]byte(t), &l) == nil && l.CWD != "" {
-				return l.CWD
+				counts[l.CWD]++
 			}
 		}
 		if err != nil {
 			break
 		}
 	}
-	return ""
+	var best, bestNonHome string
+	var bestN, bestNonHomeN int
+	for c, n := range counts {
+		if n > bestN || (n == bestN && c < best) {
+			best, bestN = c, n
+		}
+		if c != homeDir && (n > bestNonHomeN || (n == bestNonHomeN && c < bestNonHome)) {
+			bestNonHome, bestNonHomeN = c, n
+		}
+	}
+	if bestNonHome != "" {
+		if best != homeDir {
+			return best // the dominant dir is already a real project dir
+		}
+		if bestNonHomeN*100 >= bestN*10 { // home led, but a project dir was used enough
+			return bestNonHome
+		}
+	}
+	return best
 }
 
 // CountFable counts genuine Fable 5 assistant turns in a transcript using the

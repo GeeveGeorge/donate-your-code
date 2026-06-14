@@ -110,6 +110,7 @@ type Session struct {
 // DiscoverSessions enumerates every session bundle under the given roots.
 func DiscoverSessions(roots []string) ([]Session, error) {
 	var sessions []Session
+	homeDir, _ := os.UserHomeDir()
 	for _, root := range roots {
 		projectDirs, err := os.ReadDir(root)
 		if err != nil {
@@ -150,7 +151,7 @@ func DiscoverSessions(roots []string) ([]Session, error) {
 				// Read the real project path (cwd) from the transcript so we can
 				// show meaningful names instead of the lossy encoded basename.
 				if f, err := SafeOpen(s.MainFile, root); err == nil {
-					s.CWD = transcript.FirstCWD(f)
+					s.CWD = transcript.ProjectCWD(f, homeDir)
 					f.Close()
 				}
 				if s.CWD != "" {
