@@ -8,6 +8,11 @@ without pausing to ask.
 
 ## Autonomy rules (read these first)
 
+- **Asking the user a question is allowed; halting the process is not.** You may
+  ask *which projects* to donate and the final *donate y/N* — those are the user's
+  consent decisions. You must NEVER halt, abandon, hand the flow back to the user
+  to "finish in a terminal," or stop a running step. Keep moving to completion.
+
 - **Run `scan`, `preview`, and `donate --dry-run` yourself, without asking.** They
   are read-only and make **no network calls** — there is nothing to confirm. Do
   NOT stop to ask "should I run this?" or "is this okay?".
