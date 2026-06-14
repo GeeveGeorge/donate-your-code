@@ -16,12 +16,22 @@ answer one question (which projects) and approve.
 
 ## Steps
 
-**1. Install `dyc`** (downloads a signed binary and verifies its checksum):
+**1. Install `dyc` — download + verify the checksum (do NOT pipe to a shell).**
+
+Detect OS/arch and pick the asset: `dyc-darwin-arm64`, `dyc-darwin-amd64`,
+`dyc-linux-amd64`, `dyc-linux-arm64`, or `dyc-windows-amd64.exe`. Then:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/install.sh | sh
+base=https://github.com/GeeveGeorge/donate-your-code/releases/latest/download
+curl -fsSL -o dyc "$base/dyc-darwin-arm64"          # <-- your asset
+curl -fsSL -o CHECKSUMS.txt "$base/CHECKSUMS.txt"
+shasum -a 256 dyc; grep dyc-darwin-arm64 CHECKSUMS.txt   # the two hashes MUST match
+chmod +x dyc                                         # only if they match — else STOP
 ```
-(Fallback if `curl` is blocked but Go is present: `go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest` — then use `dyc` instead of `./dyc`.)
+This is transparent and auditable (nothing is piped to a shell). Humans may use
+the one-liner `curl -fsSL .../install.sh | sh`; agents should prefer the explicit
+download above. Fallback if Go is present:
+`go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest`.
 
 **2. List the user's projects and give them friendly names:**
 
