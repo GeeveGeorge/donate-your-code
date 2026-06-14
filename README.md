@@ -41,15 +41,20 @@ and approve — no API key, nothing else to set up.
 
 ## Or run it yourself
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/install.sh | sh
-# (or: go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest)
+**Zero install** — a single, transparent, stdlib-only Python script (no binary, no
+pip, works wherever `python3` is):
 
-./dyc scan                       # list projects + genuine Fable 5 turn counts (no network)
-./dyc preview <selector> --full  # show the EXACT post-scrub payload (no network)
-./dyc auth login                 # store a least-privilege GitHub token (prefers the gh CLI)
-./dyc donate <selA> <selB> ...   # scrub + validate + open ONE GitHub PR (try --dry-run first)
+```sh
+curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/dyc.py -o dyc.py
+python3 dyc.py scan                       # list projects + Fable 5 turn counts (no network)
+python3 dyc.py preview <selector> --full  # show the EXACT post-scrub payload (no network)
+python3 dyc.py auth login                 # store a least-privilege GitHub token (prefers gh)
+python3 dyc.py donate <selA> <selB> ...   # scrub + validate + open ONE PR (try --dry-run first)
 ```
+
+Prefer a compiled binary? `curl -fsSL …/install.sh | sh` (checksum-verified), or
+`go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest`. The Go and
+Python clients produce byte-identical content-addressed records.
 
 A *selector* is a project basename substring, a session id prefix, or `all`; pass
 several at once. `scan`, `preview`, and `donate --dry-run` make **no network
