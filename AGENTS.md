@@ -23,14 +23,34 @@ curl -fsSL https://raw.githubusercontent.com/GeeveGeorge/donate-your-code/main/i
 ```
 (Fallback if `curl` is blocked but Go is present: `go install github.com/GeeveGeorge/donate-your-code/cmd/dyc@latest` — then use `dyc` instead of `./dyc`.)
 
-**2. List the user's projects:**
+**2. List the user's projects and give them friendly names:**
 
 ```sh
-./dyc scan
+./dyc scan          # (or ./dyc scan --json for the machine-readable form)
 ```
-Show the user the list of projects and their Fable 5 turn counts. Ask:
-*"Which projects' Fable 5 code do you want to donate? (name them, or 'all')"*
-Nothing is donated unless they choose. This is the only required decision.
+Each row has a `PROJECT` name and a real `PATH` (e.g. `~/Downloads/EDA_DB`).
+**To present recognizable names** (not raw folder strings), briefly inspect each
+project's PATH — this is the user's own code, NOT a transcript, so it's fine to
+look. For each distinct path, derive a friendly label from, in order of
+preference:
+- the git remote repo name: `git -C <path> remote get-url origin 2>/dev/null`
+- a manifest name: `<path>/package.json` (`.name`), `pyproject.toml`, `Cargo.toml`, `go.mod`
+- the first heading of `<path>/README.md`
+- else the folder basename
+
+Do NOT read anything under `~/.claude` for this — only the project directories
+the paths point to. Then present a numbered list like:
+
+```
+1) acme-dashboard   ~/code/acme        412 Fable 5 turns
+2) eda-db           ~/Downloads/EDA_DB  55 Fable 5 turns
+3) (home sessions)  ~                  1101 Fable 5 turns
+```
+
+Ask: *"Which projects' Fable 5 code do you want to donate? (numbers/names, or
+'all')"* Nothing is donated unless they choose. This is the only required
+decision. Map their choice back to a selector (the project name or its session id)
+for the later steps.
 
 **3. Preview the exact scrubbed payload for their picks** (so they can confirm and
 deselect):

@@ -102,6 +102,7 @@ func cmdScan(args []string) int {
 
 	type row struct {
 		Project   string `json:"project"`
+		Path      string `json:"path"`
 		Session   string `json:"session"`
 		FableMain int    `json:"fable_main"`
 		FableSub  int    `json:"fable_subagents"`
@@ -121,6 +122,7 @@ func cmdScan(args []string) int {
 		total += main + sub
 		rows = append(rows, row{
 			Project:   s.ProjectBasename,
+			Path:      homeAbbrev(s.CWD),
 			Session:   short(s.SessionID),
 			FableMain: main,
 			FableSub:  sub,
@@ -144,12 +146,24 @@ func cmdScan(args []string) int {
 		fmt.Println("No sessions with genuine Fable 5 turns found. (Use --all to list every session.)")
 		return 0
 	}
-	fmt.Printf("%-24s  %-10s  %8s  %8s  %10s\n", "PROJECT", "SESSION", "FABLE", "SUBAGENT", "SIZE")
+	fmt.Printf("%-20s  %-32s  %-10s  %6s  %8s  %9s\n", "PROJECT", "PATH", "SESSION", "FABLE", "SUBAGENT", "SIZE")
 	for _, r := range rows {
-		fmt.Printf("%-24s  %-10s  %8d  %8d  %10s\n", trunc(r.Project, 24), r.Session, r.FableMain, r.FableSub, humanBytes(r.Bytes))
+		fmt.Printf("%-20s  %-32s  %-10s  %6d  %8d  %9s\n", trunc(r.Project, 20), trunc(r.Path, 32), r.Session, r.FableMain, r.FableSub, humanBytes(r.Bytes))
 	}
 	fmt.Printf("\n%d session(s) contain genuine Fable 5 turns; %d Fable 5 turn(s) total.\n", len(rows), total)
+	fmt.Println("Select projects to donate by name or path (e.g. `dyc donate <name>`), or 'all'.")
 	return 0
+}
+
+// homeAbbrev replaces the user's home prefix with ~ for friendlier display.
+func homeAbbrev(p string) string {
+	if p == "" {
+		return ""
+	}
+	if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(p, home) {
+		return "~" + p[len(home):]
+	}
+	return p
 }
 
 func countFile(path, root string) int {
@@ -279,7 +293,10 @@ func matchSelector(sel string, s discover.Session) bool {
 	if strings.HasPrefix(s.SessionID, sel) {
 		return true
 	}
-	return strings.Contains(strings.ToLower(s.ProjectBasename), strings.ToLower(sel))
+	l := strings.ToLower(sel)
+	return strings.Contains(strings.ToLower(s.ProjectBasename), l) ||
+		strings.Contains(strings.ToLower(s.CWD), l) ||
+		strings.Contains(strings.ToLower(s.EncodedName), l)
 }
 
 // ---- helpers ----

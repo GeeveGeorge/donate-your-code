@@ -158,6 +158,29 @@ func ParseReader(r io.Reader) (lines []*Line, skipped int, err error) {
 	}
 }
 
+// FirstCWD returns the first non-empty top-level `cwd` value in a transcript.
+// This is the real absolute project path (the encoded folder name is lossy when
+// path segments contain '-', e.g. EDA-DB). It is used only for LOCAL display and
+// selection; cwd is never donated.
+func FirstCWD(r io.Reader) string {
+	br := bufio.NewReaderSize(r, 1<<20)
+	for i := 0; i < 200; i++ {
+		chunk, err := br.ReadString('\n')
+		if t := strings.TrimSpace(chunk); t != "" {
+			var l struct {
+				CWD string `json:"cwd"`
+			}
+			if json.Unmarshal([]byte(t), &l) == nil && l.CWD != "" {
+				return l.CWD
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+	return ""
+}
+
 // CountFable counts genuine Fable 5 assistant turns in a transcript using the
 // fast substring pre-filter: lines without the needle are never JSON-parsed.
 func CountFable(r io.Reader) (count int, err error) {

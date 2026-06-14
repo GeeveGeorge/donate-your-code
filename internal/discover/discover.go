@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/GeeveGeorge/donate-your-code/internal/transcript"
 )
 
 // Errors returned by SafeOpen.
@@ -97,7 +99,8 @@ type Session struct {
 	Root            string   // the allowlist root this session lives under
 	ProjectDir      string   // absolute path of the encoded project directory
 	EncodedName     string   // the encoded project dir name, e.g. -Users-geeve-app
-	ProjectBasename string   // display-only basename, e.g. app
+	ProjectBasename string   // real project folder name (from cwd), e.g. EDA-DB
+	CWD             string   // real absolute project path (local display/selection only)
 	SessionID       string   // transcript filename stem (a UUID)
 	MainFile        string   // absolute path of <sessionID>.jsonl
 	SubagentFiles   []string // absolute paths of <sessionID>/subagents/*.jsonl
@@ -143,6 +146,15 @@ func DiscoverSessions(roots []string) ([]Session, error) {
 						}
 					}
 					sort.Strings(s.SubagentFiles)
+				}
+				// Read the real project path (cwd) from the transcript so we can
+				// show meaningful names instead of the lossy encoded basename.
+				if f, err := SafeOpen(s.MainFile, root); err == nil {
+					s.CWD = transcript.FirstCWD(f)
+					f.Close()
+				}
+				if s.CWD != "" {
+					s.ProjectBasename = filepath.Base(s.CWD)
 				}
 				sessions = append(sessions, s)
 			}
